@@ -1,3 +1,19 @@
+# PROBLEMA DE NEGÓCIO:
+
+#Determinada empresa do ramo da construção civil deseja avaliar se fatores econômicos
+#influenciam no saldo de emprego desse setor. Dessa forma, construa um modelo de Machine
+#Learning que seja capaz de prever o saldo(positivo/negativo) em determinado mês.
+
+#VARIÁVEIS DISPONÍVEIS NO BANCO DE DADOS
+#• saldo_emprego – diferença entre a contratação e a demissão na construção civil em
+#determinado mês; (positivo e negativo);
+#• PIB – Variação do produto interno bruto, no mês/ano (IBGE);
+#• inflacao – inflação no mês/ano (IBGE);
+#• taxa_juros – Taxa de Juros(IPCA) no mês/ano;
+#• taxa_cambio – taxa de câmbio no mês/ano;
+#• patentes – número de patentes no mês/ano;
+
+
 # Prevendo saldo
 
 set.seed(50)
@@ -13,9 +29,9 @@ emprego$saldo_emprego <- ifelse(emprego$saldo_emprego == "Positivo", 1, 0)
 emprego$saldo_emprego = as.factor(emprego$saldo_emprego)
 
 # ---------------------------------------------------------------------------------------------------------
-# Etapa 3 - Calculando a correla��o
+# Etapa 3 - Calculando a correlação
 str(emprego)
-# Explorando relacionamento entre as vari�veis: Matriz de correla��o
+# Explorando relacionamento entre as variáveis: Matriz de correlação
 correlacao = cor(doenca_hepatica[c("PIB","inflacao","taxa_juros","taxa_cambio","patentes")])
 require(corrplot)
 corrplot(correlacao,method="color",tl.cex = 0.6)
@@ -39,7 +55,7 @@ table(base_treino$saldo_emprego)
 prop.table(table(base_treino$saldo_emprego))
 barplot(prop.table(table(base_treino$saldo_emprego)))
 
-#Como h� mais respostas negativas que positivas ser� feito o balanceamento:
+#Como há mais respostas negativas que positivas será feito o balanceamento:
 
 #install.packages("tidymodels")
 require(tidymodels)
@@ -52,20 +68,20 @@ prop.table(table(dados_treino_balanceado$saldo_emprego))
 
 # ---------------------------------------------------------------------------------------------------------
 
-#Etapa 5 - Construindo o modelo de regress�o log�stica
+#Etapa 5 - Construindo o modelo de regressão logística
 modelo1 <- glm(saldo_emprego ~ ., 
                data = dados_treino_balanceado, family = "binomial"(link = "logit"))
 summary(modelo1)
 
 # -------------------------------
-# Retirando a vari�vel inflacao
+# Retirando a variável inflacao
 modelo2 <- glm(saldo_emprego ~ . -inflacao, 
                data = dados_treino_balanceado, family = "binomial"(link = "logit"))
 summary(modelo2)
 
 # Comparando modelo menor com o maior
 anova(modelo2, modelo1, test="Chisq") 
-# se valor p > niv.sig., as vari�veis omitidas n�o s�o significativas 
+# se valor p > niv.sig., as variáveis omitidas não são significativas 
 
 #Comparando os dois AICs
 AIC(modelo1)
@@ -76,9 +92,9 @@ library(car)
 vif(modelo2) # valores abaixo de 5 - OK
 
 ## ---------------------------------------
-##Etapa 6 - FAzendo previs�es do modelo de treino
+##Etapa 6 - FAzendo previsões do modelo de treino
 
-#Probabilidade da pessoa desenvolver ou n�o do saldo ser positivo
+#Probabilidade da pessoa desenvolver ou não do saldo ser positivo
 previsoes_treino <- predict(modelo2, dados_treino_balanceado,type = "response")
 
 resultados_treino <- data.frame(previsoes_treino, dados_treino_balanceado$saldo_emprego)
@@ -104,7 +120,7 @@ colnames(resultados_treino) <- c('previsto_prob','real_treino','previsto_cat',"p
 ##Etapa 7- Desempenho do modelo de treino
 
 
-# Matriz de confus�o e medidas
+# Matriz de confusão e medidas
 library(caret)
 matriz_confusao_treino = confusionMatrix(resultados_treino$previsto_cat, dados_treino_balanceado$saldo_emprego, positive = "1")
 matriz_confusao_treino
@@ -122,7 +138,7 @@ ggplot(resultados_treino, aes(fill = real_treino,
 
 ## ---------------------------------------
 
-##Etapa 8- FAzendo previs�es do modelo de teste
+##Etapa 8- FAzendo previsões do modelo de teste
 
 previsoes_teste <- predict(modelo2, base_teste,type = "response")
 
